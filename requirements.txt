@@ -1,6 +1,7 @@
 # Application Bancaire - Prédiction Carte Gold
 # Compatible avec Python 3.10+
 openai
+python-dotenv
 
 # Framework web
 streamlit>=1.28.0
