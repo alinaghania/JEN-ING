@@ -183,6 +183,8 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
     
     img_copy = image.copy()
     draw = ImageDraw.Draw(img_copy)
+    using_default_font = False
+
     
     # try:
     #     font = ImageFont.truetype("arial.ttf", font_size)
