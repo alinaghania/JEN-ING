@@ -176,31 +176,73 @@ def add_logo_to_image(image, logo_path, position="top-left", size=(200, 115)):
         st.error(f"Erreur lors de l'ajout du logo : {str(e)}")
         return image
 
+def is_streamlit_cloud():
+    """Détecte si l'app tourne sur Streamlit Cloud"""
+    return (
+        os.getenv('STREAMLIT_SHARING_MODE') is not None or
+        os.getenv('STREAMLIT_SERVER_HEADLESS') == 'true' or
+        'streamlit.app' in os.getenv('HOSTNAME', '') or
+        'streamlit.app' in os.getenv('SERVER_NAME', '') or
+        os.getenv('STREAMLIT_RUNTIME_MEMORY_LIMIT') is not None
+    )
+
+def get_font_multiplier():
+    """Retourne le multiplicateur de police selon l'environnement"""
+    if is_streamlit_cloud():
+        return 2.5  # Multiplicateur élevé pour Streamlit Cloud
+    else:
+        return 1.0  # Taille normale pour environnement local
+
 def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None, rect_height_custom=None):
-    """Ajoute du texte avec fond orange IMPOSANT sur l'image"""
+    """Ajoute du texte avec fond orange IMPOSANT sur l'image - OPTIMISÉ STREAMLIT CLOUD"""
     if not text.strip():
         return image
     
     img_copy = image.copy()
     draw = ImageDraw.Draw(img_copy)
     
-    try:
-        font = ImageFont.truetype("arial.ttf", font_size)
-    except:
+    # CORRECTION PRINCIPALE: Adapter la taille selon l'environnement
+    actual_font_size = int(font_size * get_font_multiplier())
+    
+    # Essayer plusieurs polices avec fallback robuste pour Streamlit Cloud
+    font = None
+    font_paths = [
+        "arial.ttf",
+        "Arial.ttf", 
+        "Arial Bold.ttf",
+        "DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux (Streamlit Cloud)
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/System/Library/Fonts/Arial.ttf",  # macOS
+        "/Windows/Fonts/arial.ttf",  # Windows
+        "/usr/share/fonts/TTF/arial.ttf"
+    ]
+    
+    for font_path in font_paths:
         try:
-            font = ImageFont.truetype("Arial Bold.ttf", font_size)
+            font = ImageFont.truetype(font_path, actual_font_size)
+            break
+        except:
+            continue
+    
+    # Si aucune police TrueType trouvée, utiliser effet spécial avec police par défaut
+    if font is None:
+        try:
+            font = ImageFont.load_default()
+            use_stroke_effect = True
         except:
             font = ImageFont.load_default()
+            use_stroke_effect = True
+    else:
+        use_stroke_effect = False
     
     orange_color = "#FF6600"
     white_color = "#FFFFFF"
     
     # Gérer les retours à la ligne manuels dans le texte
     if '\n' in text:
-        # L'utilisateur a défini ses propres lignes
         lines = text.split('\n')
     else:
-        # Découpage automatique en fonction de la largeur
         words = text.split()
         lines = []
         current_line = []
@@ -209,7 +251,7 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
         for word in words:
             test_line = ' '.join(current_line + [word])
             bbox = draw.textbbox((0, 0), test_line, font=font)
-            if bbox[2] - bbox[0] <= max_width - 120:  # Laisser de la place pour le padding
+            if bbox[2] - bbox[0] <= max_width - 120:
                 current_line.append(word)
             else:
                 if current_line:
@@ -221,17 +263,22 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
         if current_line:
             lines.append(' '.join(current_line))
     
-    # Calculer les dimensions du rectangle
-    line_height = int(font_size * 1.4)
-    padding_vertical = max(40, int(font_size * 0.8))
-    padding_horizontal = max(60, int(font_size * 1.0))
+    # Calculer dimensions avec facteurs adaptés
+    if use_stroke_effect:
+        # Pour police par défaut, utiliser des dimensions amplifiées
+        line_height = int(font_size * 3.0)
+        padding_vertical = max(60, int(font_size * 1.2))
+        padding_horizontal = max(80, int(font_size * 1.5))
+    else:
+        line_height = int(actual_font_size * 1.4)
+        padding_vertical = max(40, int(actual_font_size * 0.8))
+        padding_horizontal = max(60, int(actual_font_size * 1.0))
     
     # Utiliser les dimensions personnalisées ou calculer automatiquement
     if rect_width_custom and rect_height_custom:
         rect_width = rect_width_custom
         rect_height = rect_height_custom
     else:
-        # Calcul automatique basé sur le texte
         total_height = len(lines) * line_height + padding_vertical * 2
         max_line_width = max([draw.textbbox((0, 0), line, font=font)[2] for line in lines]) if lines else 200
         rect_width = max_line_width + padding_horizontal * 2
@@ -257,15 +304,28 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
     total_text_height = len(lines) * line_height
     start_y = y + (rect_height - total_text_height) // 2
     
-    # Dessiner chaque ligne de texte centrée
+    # Dessiner chaque ligne de texte avec renforcement si nécessaire
     for i, line in enumerate(lines):
-        # Calculer la largeur de la ligne pour centrer horizontalement
         line_bbox = draw.textbbox((0, 0), line, font=font)
         line_width = line_bbox[2] - line_bbox[0]
         text_x = x + (rect_width - line_width) // 2
         text_y = start_y + i * line_height
         
-        draw.text((text_x, text_y), line, fill=white_color, font=font)
+        if use_stroke_effect:
+            # Effet stroke épais pour police par défaut sur Streamlit Cloud
+            stroke_width = max(3, font_size // 15)
+            for dx in range(-stroke_width, stroke_width + 1):
+                for dy in range(-stroke_width, stroke_width + 1):
+                    if dx != 0 or dy != 0:
+                        draw.text((text_x + dx, text_y + dy), line, fill=orange_color, font=font)
+            
+            # Texte principal répété plusieurs fois pour épaisseur
+            for repeat in range(4):
+                offset = repeat * 2
+                draw.text((text_x + offset, text_y + offset), line, fill=white_color, font=font)
+        else:
+            # Police TrueType normale
+            draw.text((text_x, text_y), line, fill=white_color, font=font)
     
     return img_copy
 
@@ -276,12 +336,12 @@ def main():
         initial_sidebar_state="collapsed"
     )
     
-    # CSS luxueux inspiré de Chanel avec correction pour les palettes
+    # CSS CORRIGÉ pour Streamlit Cloud avec détection d'environnement
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
     
-    /* Variables CSS pour la cohérence */
+    /* Variables CSS adaptées pour Streamlit Cloud */
     :root {
         --chanel-black: #000000;
         --chanel-white: #FFFFFF;
@@ -290,9 +350,10 @@ def main():
         --chanel-pearl: #F5F5F5;
         --chanel-shadow: rgba(0, 0, 0, 0.1);
         --chanel-shadow-deep: rgba(0, 0, 0, 0.25);
+        --base-font-size: 16px;
     }
     
-    /* Reset et base */
+    /* Reset et base avec tailles forcées */
     * {
         box-sizing: border-box;
     }
@@ -306,6 +367,13 @@ def main():
         background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
         font-family: 'Inter', sans-serif;
         color: var(--chanel-black);
+        font-size: var(--base-font-size) !important;
+    }
+    
+    /* CORRECTION CRITIQUE: Forcer toutes les tailles de police */
+    .stApp *, .element-container *, .stMarkdown *, .stText *, div[data-testid="stMarkdownContainer"] * {
+        font-size: inherit !important;
+        line-height: 1.6 !important;
     }
     
     /* Header majestueux */
@@ -340,7 +408,7 @@ def main():
     
     .chanel-logo {
         font-family: 'Playfair Display', serif;
-        font-size: 3.5rem;
+        font-size: clamp(2.5rem, 6vw, 3.5rem) !important;
         font-weight: 300;
         color: var(--chanel-white);
         letter-spacing: 8px;
@@ -349,11 +417,12 @@ def main():
         position: relative;
         z-index: 2;
         text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        line-height: 1.2 !important;
     }
     
     .chanel-subtitle {
         font-family: 'Inter', sans-serif;
-        font-size: 0.9rem;
+        font-size: clamp(0.8rem, 2vw, 0.9rem) !important;
         font-weight: 300;
         color: var(--chanel-gold);
         letter-spacing: 3px;
@@ -361,6 +430,7 @@ def main():
         margin-top: 1rem;
         position: relative;
         z-index: 2;
+        line-height: 1.4 !important;
     }
     
     .chanel-divider {
@@ -436,16 +506,17 @@ def main():
         background: linear-gradient(90deg, var(--chanel-gold) 0%, #FFD700 50%, var(--chanel-gold) 100%);
     }
     
-    /* Titres de section sophistiqués */
+    /* Titres de section sophistiqués avec tailles forcées */
     .chanel-section-title {
         font-family: 'Playfair Display', serif;
-        font-size: 1.8rem;
+        font-size: clamp(1.4rem, 4vw, 1.8rem) !important;
         font-weight: 400;
         color: var(--chanel-black);
         margin: 3rem 0 2rem 0;
         text-align: center;
         position: relative;
         letter-spacing: 1px;
+        line-height: 1.3 !important;
     }
     
     .chanel-section-title::after {
@@ -472,44 +543,84 @@ def main():
         font-weight: 500;
         color: var(--chanel-gold);
         margin-right: 1rem;
-        font-size: 1.1rem;
+        font-size: 1.1rem !important;
     }
     
-    /* Inputs raffinés */
+    /* Inputs raffinés avec tailles forcées */
     .stTextArea textarea {
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        border-radius: 0;
-        padding: 1.5rem;
-        font-family: 'Inter', sans-serif;
-        font-size: 1rem;
-        line-height: 1.6;
-        background: var(--chanel-pearl);
-        transition: all 0.4s ease;
-        resize: vertical;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        border-radius: 0 !important;
+        padding: 1.5rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+        background: var(--chanel-pearl) !important;
+        transition: all 0.4s ease !important;
+        resize: vertical !important;
+        min-height: 120px !important;
     }
     
     .stTextArea textarea:focus {
-        border-color: var(--chanel-gold);
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-        background: var(--chanel-white);
-        outline: none;
+        border-color: var(--chanel-gold) !important;
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1) !important;
+        background: var(--chanel-white) !important;
+        outline: none !important;
     }
     
-    /* Boutons luxueux */
+    /* Contrôles numériques */
+    .stNumberInput input {
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        border-radius: 0 !important;
+        background: var(--chanel-pearl) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 16px !important;
+        padding: 0.8rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stNumberInput input:focus {
+        border-color: var(--chanel-gold) !important;
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1) !important;
+        background: var(--chanel-white) !important;
+        outline: none !important;
+    }
+    
+    /* Sliders avec labels forcés */
+    .stSlider {
+        font-size: 14px !important;
+    }
+    
+    .stSlider label {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: var(--chanel-black) !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .stSlider > div > div > div {
+        background: var(--chanel-gold) !important;
+    }
+    
+    .stSlider > div > div > div > div {
+        background: var(--chanel-black) !important;
+    }
+    
+    /* Boutons luxueux avec tailles garanties */
     .stButton button {
-        background: linear-gradient(135deg, var(--chanel-black) 0%, #333 100%);
-        color: var(--chanel-white);
-        border: 1px solid var(--chanel-black);
-        border-radius: 0;
-        padding: 1rem 2.5rem;
-        font-family: 'Inter', sans-serif;
-        font-weight: 500;
-        font-size: 0.9rem;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, var(--chanel-black) 0%, #333 100%) !important;
+        color: var(--chanel-white) !important;
+        border: 1px solid var(--chanel-black) !important;
+        border-radius: 0 !important;
+        padding: 1.2rem 2rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+        min-height: 50px !important;
     }
     
     .stButton button::before {
@@ -528,9 +639,9 @@ def main():
     }
     
     .stButton button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        border-color: var(--chanel-gold);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+        border-color: var(--chanel-gold) !important;
     }
     
     /* Boutons primaires dorés */
@@ -556,6 +667,38 @@ def main():
     
     .stButton button[kind="secondary"]:hover {
         background: var(--chanel-gold) !important;
+        color: var(--chanel-black) !important;
+    }
+    
+    /* Checkboxes */
+    .stCheckbox > label {
+        font-family: 'Inter', sans-serif !important;
+        color: var(--chanel-black) !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+    }
+    
+    .stCheckbox input:checked + div {
+        background-color: var(--chanel-gold) !important;
+        border-color: var(--chanel-gold) !important;
+    }
+    
+    /* Selectboxes */
+    .stSelectbox > div > div {
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        border-radius: 0 !important;
+        background: var(--chanel-pearl) !important;
+        font-size: 14px !important;
+    }
+    
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--chanel-gold) !important;
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1) !important;
+    }
+    
+    .stSelectbox label {
+        font-size: 14px !important;
+        font-weight: 600 !important;
         color: var(--chanel-black) !important;
     }
     
@@ -622,258 +765,21 @@ def main():
 
     .palette-name {
         font-family: 'Playfair Display', serif;
-        font-size: 0.95rem;
+        font-size: 0.95rem !important;
         font-weight: 500;
         color: var(--chanel-black);
         margin-bottom: 0.3rem;
+        line-height: 1.2 !important;
     }
 
     .palette-description {
-        font-size: 0.75rem;
+        font-size: 0.75rem !important;
         color: #666;
         font-style: italic;
-        line-height: 1.2;
+        line-height: 1.2 !important;
     }
     
-    /* Prompts prédéfinis élégants */
-    .chanel-prompt-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin: 2rem 0;
-    }
-    
-    .chanel-prompt-card {
-        background: linear-gradient(135deg, var(--chanel-pearl) 0%, var(--chanel-white) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.2);
-        padding: 1.5rem;
-        text-align: left;
-        transition: all 0.4s ease;
-        cursor: pointer;
-        position: relative;
-    }
-    
-    .chanel-prompt-card:hover {
-        border-color: var(--chanel-gold);
-        background: var(--chanel-white);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px var(--chanel-shadow);
-    }
-    
-    .prompt-label {
-        font-family: 'Playfair Display', serif;
-        font-weight: 600;
-        color: var(--chanel-gold);
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .prompt-text {
-        font-size: 0.9rem;
-        line-height: 1.4;
-        color: #555;
-    }
-    
-    /* Messages de marque sophistiqués */
-    .chanel-message-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin: 1.5rem 0;
-    }
-    
-    .chanel-message-card {
-        background: linear-gradient(135deg, #f8f8f8 0%, var(--chanel-white) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        padding: 1rem;
-        text-align: center;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        font-family: 'Playfair Display', serif;
-        font-style: italic;
-    }
-    
-    .chanel-message-card:hover {
-        background: var(--chanel-gold);
-        color: var(--chanel-white);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
-    }
-    
-    /* Contrôles de positionnement */
-    .stSlider > div > div > div {
-        background: var(--chanel-gold) !important;
-    }
-    
-    .stSlider > div > div > div > div {
-        background: var(--chanel-black) !important;
-    }
-    
-    .stNumberInput input {
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        border-radius: 0;
-        background: var(--chanel-pearl);
-        font-family: 'Inter', sans-serif;
-        transition: all 0.3s ease;
-    }
-    
-    .stNumberInput input:focus {
-        border-color: var(--chanel-gold);
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-        background: var(--chanel-white);
-        outline: none;
-    }
-    
-    .stCheckbox > label {
-        font-family: 'Inter', sans-serif;
-        color: var(--chanel-black);
-        font-weight: 500;
-    }
-    
-    .stCheckbox input:checked + div {
-        background-color: var(--chanel-gold) !important;
-        border-color: var(--chanel-gold) !important;
-    }
-    
-    .stSelectbox > div > div {
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        border-radius: 0;
-        background: var(--chanel-pearl);
-    }
-    
-    .stSelectbox > div > div:focus-within {
-        border-color: var(--chanel-gold);
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-    }
-    
-    /* Zone d'amélioration du prompt */
-    .chanel-enhanced-prompt {
-        background: linear-gradient(135deg, #fefefe 0%, var(--chanel-cream) 100%);
-        border: 2px solid var(--chanel-gold);
-        padding: 2rem;
-        margin: 2rem 0;
-        position: relative;
-    }
-    
-    .chanel-enhanced-prompt::before {
-        content: 'ENHANCED';
-        position: absolute;
-        top: -10px;
-        left: 20px;
-        background: var(--chanel-gold);
-        color: var(--chanel-black);
-        padding: 0.3rem 1rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-        letter-spacing: 1px;
-    }
-    
-    /* Zone de résultat */
-    .chanel-result-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 2.5rem;
-        font-weight: 300;
-        color: var(--chanel-white);
-        text-align: center;
-        margin-bottom: 3rem;
-        letter-spacing: 2px;
-    }
-    
-    .chanel-placeholder {
-        text-align: center;
-        padding: 6rem 2rem;
-        color: rgba(255, 255, 255, 0.7);
-    }
-    
-    .chanel-placeholder h3 {
-        font-family: 'Playfair Display', serif;
-        font-size: 2rem;
-        font-weight: 300;
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 1rem;
-    }
-    
-    .chanel-placeholder p {
-        font-size: 1rem;
-        font-weight: 300;
-    }
-    
-    /* Tips section luxueuse */
-    .chanel-tips {
-        border: 2px solid var(--chanel-gold);
-        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
-        padding: 2rem;
-        margin: 3rem 0;
-        position: relative;
-    }
-    
-    .chanel-tips::before {
-        content: 'STUDIO TIPS';
-        position: absolute;
-        top: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--chanel-white);
-        color: var(--chanel-gold);
-        padding: 0.5rem 1.5rem;
-        font-family: 'Playfair Display', serif;
-        font-weight: 500;
-        letter-spacing: 1px;
-    }
-    
-    .tips-title {
-        font-family: 'Playfair Display', serif;
-        color: var(--chanel-black);
-        font-weight: 600;
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-    }
-    
-    .tips-content {
-        color: #444;
-        line-height: 1.8;
-        font-size: 0.95rem;
-    }
-    
-    /* Masquer les éléments Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .stDeployButton {display: none;}
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .chanel-logo {
-            font-size: 2.5rem;
-            letter-spacing: 4px;
-        }
-        
-        .chanel-container {
-            margin-top: -60px;
-            padding: 0 1.5rem 3rem;
-        }
-        
-        .chanel-card {
-            padding: 2rem;
-        }
-        
-        .chanel-palette-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.8rem;
-        }
-        
-        .chanel-prompt-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .chanel-palette-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    /* Styles pour les palettes compactes */
+    /* Palettes compactes pour Streamlit Cloud */
     .chanel-color-palette-compact {
         border: 1px solid rgba(212, 175, 55, 0.2);
         padding: 0.5rem;
@@ -905,6 +811,229 @@ def main():
         color: var(--chanel-gold);
         font-weight: bold;
         font-size: 0.8rem;
+    }
+    
+    /* Prompts prédéfinis élégants */
+    .chanel-prompt-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .chanel-prompt-card {
+        background: linear-gradient(135deg, var(--chanel-pearl) 0%, var(--chanel-white) 100%);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        padding: 1.5rem;
+        text-align: left;
+        transition: all 0.4s ease;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .chanel-prompt-card:hover {
+        border-color: var(--chanel-gold);
+        background: var(--chanel-white);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px var(--chanel-shadow);
+    }
+    
+    .prompt-label {
+        font-family: 'Playfair Display', serif;
+        font-weight: 600;
+        color: var(--chanel-gold);
+        font-size: 1rem !important;
+        margin-bottom: 0.5rem;
+        line-height: 1.2 !important;
+    }
+    
+    .prompt-text {
+        font-size: 0.9rem !important;
+        line-height: 1.4 !important;
+        color: #555;
+    }
+    
+    /* Messages de marque sophistiqués */
+    .chanel-message-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .chanel-message-card {
+        background: linear-gradient(135deg, #f8f8f8 0%, var(--chanel-white) 100%);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+        font-size: 0.9rem !important;
+    }
+    
+    .chanel-message-card:hover {
+        background: var(--chanel-gold);
+        color: var(--chanel-white);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+    }
+    
+    /* Zone d'amélioration du prompt */
+    .chanel-enhanced-prompt {
+        background: linear-gradient(135deg, #fefefe 0%, var(--chanel-cream) 100%);
+        border: 2px solid var(--chanel-gold);
+        padding: 2rem;
+        margin: 2rem 0;
+        position: relative;
+    }
+    
+    .chanel-enhanced-prompt::before {
+        content: 'ENHANCED';
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        background: var(--chanel-gold);
+        color: var(--chanel-black);
+        padding: 0.3rem 1rem;
+        font-size: 0.7rem !important;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+    
+    /* Zone de résultat */
+    .chanel-result-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2rem, 5vw, 2.5rem) !important;
+        font-weight: 300;
+        color: var(--chanel-white);
+        text-align: center;
+        margin-bottom: 3rem;
+        letter-spacing: 2px;
+        line-height: 1.2 !important;
+    }
+    
+    .chanel-placeholder {
+        text-align: center;
+        padding: 6rem 2rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .chanel-placeholder h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.5rem, 4vw, 2rem) !important;
+        font-weight: 300;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 1rem;
+        line-height: 1.3 !important;
+    }
+    
+    .chanel-placeholder p {
+        font-size: 1rem !important;
+        font-weight: 300;
+        line-height: 1.5 !important;
+    }
+    
+    /* Tips section luxueuse */
+    .chanel-tips {
+        border: 2px solid var(--chanel-gold);
+        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
+        padding: 2rem;
+        margin: 3rem 0;
+        position: relative;
+    }
+    
+    .chanel-tips::before {
+        content: 'STUDIO TIPS';
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--chanel-white);
+        color: var(--chanel-gold);
+        padding: 0.5rem 1.5rem;
+        font-family: 'Playfair Display', serif;
+        font-weight: 500;
+        letter-spacing: 1px;
+        font-size: 0.9rem !important;
+    }
+    
+    .tips-title {
+        font-family: 'Playfair Display', serif;
+        color: var(--chanel-black);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1.2rem !important;
+        line-height: 1.3 !important;
+    }
+    
+    .tips-content {
+        color: #444;
+        line-height: 1.8 !important;
+        font-size: 0.95rem !important;
+    }
+    
+    /* Masquer les éléments Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display: none;}
+    
+    /* Responsive design avec tailles forcées */
+    @media (max-width: 768px) {
+        :root {
+            --base-font-size: 15px;
+        }
+        
+        .chanel-logo {
+            font-size: clamp(2rem, 8vw, 2.5rem) !important;
+            letter-spacing: 4px;
+        }
+        
+        .chanel-container {
+            margin-top: -60px;
+            padding: 0 1.5rem 3rem;
+        }
+        
+        .chanel-card {
+            padding: 2rem;
+        }
+        
+        .chanel-palette-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+        
+        .chanel-prompt-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stTextArea textarea {
+            font-size: 15px !important;
+        }
+        
+        .stButton button {
+            font-size: 13px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        :root {
+            --base-font-size: 14px;
+        }
+        
+        .chanel-palette-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stTextArea textarea {
+            font-size: 14px !important;
+        }
+        
+        .stButton button {
+            font-size: 12px !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -1159,61 +1288,6 @@ def main():
             prompt_html = f"""
             <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
                 <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Entrepreneur</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Entrepreneur"]}</div>
-            </div>
-            """
-            st.markdown(prompt_html, unsafe_allow_html=True)
-            
-            if st.button("USE ENTREPRENEUR", key="default_prompt_0", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Entrepreneur"]
-                st.rerun()
-
-        with col2_prompt1:
-            prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Family</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Family"]}</div>
-            </div>
-            """
-            st.markdown(prompt_html, unsafe_allow_html=True)
-            
-            if st.button("USE FAMILY", key="default_prompt_1", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Family"]
-                st.rerun()
-
-        with col3_prompt1:
-            prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Business Woman</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Business Woman"]}</div>
-            </div>
-            """
-            st.markdown(prompt_html, unsafe_allow_html=True)
-            
-            if st.button("USE BUSINESS WOMAN", key="default_prompt_2", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Business Woman"]
-                st.rerun()
-
-        # DEUXIÈME LIGNE : Student, Couple, Freelancer
-        col1_prompt2, col2_prompt2, col3_prompt2 = st.columns(3, gap="small")
-
-        with col1_prompt2:
-            prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Student</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Student"]}</div>
-            </div>
-            """
-            st.markdown(prompt_html, unsafe_allow_html=True)
-            
-            if st.button("USE STUDENT", key="default_prompt_3", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Student"]
-                st.rerun()
-
-        with col2_prompt2:
-            prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Couple</div>
                 <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Couple"]}</div>
             </div>
             """
@@ -1374,7 +1448,16 @@ def main():
             text_y = st.slider("Position Y", 0, 800, 753, key="pos_y")
         
         with col_pos3:
-            font_size = st.slider("Taille Typographique", 20, 120, 60, key="font_size")
+            # CORRECTION: Slider avec valeurs adaptées à Streamlit Cloud
+            font_size = st.slider(
+                "Taille Typographique", 
+                min_value=30,      # Minimum plus élevé
+                max_value=200,     # Maximum plus élevé
+                value=80,          # Valeur par défaut plus élevée
+                step=5,
+                key="font_size",
+                help="⚠️ Optimisé pour Streamlit Cloud - taille effective adaptée automatiquement"
+            )
         
         # Section 5: Dimensions du rectangle
         st.markdown("""
@@ -1560,4 +1643,59 @@ def main():
     st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()
+    main()_prompts["Entrepreneur"]}</div>
+            </div>
+            """
+            st.markdown(prompt_html, unsafe_allow_html=True)
+            
+            if st.button("USE ENTREPRENEUR", key="default_prompt_0", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Entrepreneur"]
+                st.rerun()
+
+        with col2_prompt1:
+            prompt_html = f"""
+            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Family</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Family"]}</div>
+            </div>
+            """
+            st.markdown(prompt_html, unsafe_allow_html=True)
+            
+            if st.button("USE FAMILY", key="default_prompt_1", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Family"]
+                st.rerun()
+
+        with col3_prompt1:
+            prompt_html = f"""
+            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Business Woman</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Business Woman"]}</div>
+            </div>
+            """
+            st.markdown(prompt_html, unsafe_allow_html=True)
+            
+            if st.button("USE BUSINESS WOMAN", key="default_prompt_2", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Business Woman"]
+                st.rerun()
+
+        # DEUXIÈME LIGNE : Student, Couple, Freelancer
+        col1_prompt2, col2_prompt2, col3_prompt2 = st.columns(3, gap="small")
+
+        with col1_prompt2:
+            prompt_html = f"""
+            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Student</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Student"]}</div>
+            </div>
+            """
+            st.markdown(prompt_html, unsafe_allow_html=True)
+            
+            if st.button("USE STUDENT", key="default_prompt_3", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Student"]
+                st.rerun()
+
+        with col2_prompt2:
+            prompt_html = f"""
+            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Couple</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default
