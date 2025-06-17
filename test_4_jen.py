@@ -1485,7 +1485,7 @@ def main():
             
             # Ajouter le logo si demandé
             if add_logo:
-                logo_path = "/Users/alina.ghani/Desktop/ING-logo.png"
+                logo_path = "ING-logo.png"
                 logo_size = (logo_width, logo_height) if add_logo else (200, 115)
                 final_image = add_logo_to_image(
                     final_image, 
