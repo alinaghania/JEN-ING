@@ -119,13 +119,13 @@ Return ONLY the improved prompt, nothing else."""
         st.error(f"Erreur lors de l'amélioration du prompt : {str(e)}")
         return user_prompt
 
-def generate_image_openai(prompt):
+def generate_image_openai(prompt, image_format="1024x1024"):
     """Génère une image avec OpenAI GPT-Image-1"""
     try:
         response = client.images.generate(
             model="gpt-image-1",
             prompt=prompt,
-            size="1024x1024",
+            size=image_format,
             n=1,
         )
         
@@ -185,15 +185,6 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
     draw = ImageDraw.Draw(img_copy)
     using_default_font = False
 
-    
-    # try:
-    #     font = ImageFont.truetype("arial.ttf", font_size)
-    # except:
-    #     try:
-    #         font = ImageFont.truetype("Arial Bold.ttf", font_size)
-    #     except:
-    #         font = ImageFont.load_default()
-    
     try:
         # Essayer plusieurs polices courantes sur différents systèmes
         font_paths = [
@@ -222,9 +213,6 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
         if font is None:
             font = ImageFont.load_default()
             using_default_font = True
-            # Pour compenser la petite taille de la police par défaut, on peut ajuster le font_size
-            # Mais malheureusement load_default() ne prend pas de paramètre de taille
-            # Dans ce cas, on va utiliser une approche différente
                 
     except Exception as e:
         font = ImageFont.load_default()
@@ -264,11 +252,6 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
         
         if current_line:
             lines.append(' '.join(current_line))
-    
-    # Calculer les dimensions du rectangle
-    # line_height = int(font_size * 1.4)
-    # padding_vertical = max(40, int(font_size * 0.8))
-    # padding_horizontal = max(60, int(font_size * 1.0))
     
     # Calculer les dimensions du rectangle avec compensation pour police par défaut
     if using_default_font:
@@ -613,6 +596,78 @@ def main():
         color: var(--chanel-black) !important;
     }
     
+    /* Selectbox format d'image */
+    .stSelectbox > div > div {
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 0;
+        background: var(--chanel-pearl);
+        transition: all 0.3s ease;
+    }
+    
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--chanel-gold);
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+    }
+    
+    /* Cartes de format d'image */
+    .format-card {
+        border: 2px solid rgba(212, 175, 55, 0.3);
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: var(--chanel-white);
+        position: relative;
+    }
+    
+    .format-card:hover {
+        border-color: var(--chanel-gold);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px var(--chanel-shadow);
+    }
+    
+    .format-card.selected {
+        border-color: var(--chanel-gold);
+        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+    }
+    
+    .format-card.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        color: var(--chanel-gold);
+        font-weight: bold;
+        font-size: 1rem;
+    }
+    
+    .format-preview {
+        width: 80px;
+        height: 60px;
+        border: 2px solid #ddd;
+        margin: 0 auto 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: #666;
+        background: #f9f9f9;
+    }
+    
+    .format-name {
+        font-family: 'Playfair Display', serif;
+        font-weight: 500;
+        color: var(--chanel-black);
+        margin-bottom: 0.3rem;
+    }
+    
+    .format-dimensions {
+        font-size: 0.75rem;
+        color: #666;
+    }
+    
     /* CORRECTION: Palettes de couleurs compactes en 3x2 */
     .chanel-palette-grid {
         display: grid;
@@ -787,17 +842,6 @@ def main():
     .stCheckbox input:checked + div {
         background-color: var(--chanel-gold) !important;
         border-color: var(--chanel-gold) !important;
-    }
-    
-    .stSelectbox > div > div {
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        border-radius: 0;
-        background: var(--chanel-pearl);
-    }
-    
-    .stSelectbox > div > div:focus-within {
-        border-color: var(--chanel-gold);
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
     }
     
     /* Zone d'amélioration du prompt */
@@ -980,7 +1024,108 @@ def main():
     with col1:
         st.markdown('<div class="chanel-card">', unsafe_allow_html=True)
         
-        # Section 1: Palette de couleurs
+        # Section 0: Format d'image (NOUVELLE SECTION)
+        st.markdown("""
+        <div class="chanel-section-title">
+            <span class="chanel-section-number">0</span>
+            Image Format
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Définir les formats d'image (selon les tailles supportées par OpenAI)
+        image_formats = {
+            "Square": {
+                "size": "1024x1024",
+                "ratio": "1:1",
+                "description": "Perfect for Instagram posts",
+                "preview_ratio": 1.0
+            },
+            "Portrait": {
+                "size": "1024x1536",
+                "ratio": "2:3",
+                "description": "Instagram Stories, vertical posts",
+                "preview_ratio": 1.5
+            },
+            "Landscape": {
+                "size": "1536x1024",
+                "ratio": "3:2",
+                "description": "LinkedIn, horizontal posts",
+                "preview_ratio": 0.67
+            }
+        }
+        
+        selected_format = st.session_state.get('selected_format', "Square")
+        
+        # Affichage des formats en 3 colonnes
+        col_format1, col_format2, col_format3 = st.columns(3, gap="small")
+        
+        with col_format1:
+            format_data = image_formats["Square"]
+            selected_class = "selected" if selected_format == "Square" else ""
+            
+            format_html = f"""
+            <div class="format-card {selected_class}" style="border: 2px solid rgba(212, 175, 55, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
+                <div style="width: 60px; height: 60px; border: 2px solid #ddd; margin: 0 auto 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #666; background: #f9f9f9;">
+                    {format_data["ratio"]}
+                </div>
+                <div style="font-family: 'Playfair Display', serif; font-weight: 500; margin-bottom: 0.3rem;">Square</div>
+                <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.3rem;">{format_data["size"]}</div>
+                <div style="font-size: 0.7rem; color: #888; font-style: italic;">{format_data["description"]}</div>
+            </div>
+            """
+            st.markdown(format_html, unsafe_allow_html=True)
+            
+            if st.button("SELECT SQUARE", key="format_Square", 
+                       type="primary" if selected_format == "Square" else "secondary",
+                       use_container_width=True):
+                st.session_state.selected_format = "Square"
+                st.rerun()
+        
+        with col_format2:
+            format_data = image_formats["Portrait"]
+            selected_class = "selected" if selected_format == "Portrait" else ""
+            
+            format_html = f"""
+            <div class="format-card {selected_class}" style="border: 2px solid rgba(212, 175, 55, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
+                <div style="width: 40px; height: 60px; border: 2px solid #ddd; margin: 0 auto 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #666; background: #f9f9f9;">
+                    {format_data["ratio"]}
+                </div>
+                <div style="font-family: 'Playfair Display', serif; font-weight: 500; margin-bottom: 0.3rem;">Portrait</div>
+                <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.3rem;">{format_data["size"]}</div>
+                <div style="font-size: 0.7rem; color: #888; font-style: italic;">{format_data["description"]}</div>
+            </div>
+            """
+            st.markdown(format_html, unsafe_allow_html=True)
+            
+            if st.button("SELECT PORTRAIT", key="format_Portrait", 
+                       type="primary" if selected_format == "Portrait" else "secondary",
+                       use_container_width=True):
+                st.session_state.selected_format = "Portrait"
+                st.rerun()
+        
+        with col_format3:
+            format_data = image_formats["Landscape"]
+            selected_class = "selected" if selected_format == "Landscape" else ""
+            
+            format_html = f"""
+            <div class="format-card {selected_class}" style="border: 2px solid rgba(212, 175, 55, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
+                <div style="width: 90px; height: 60px; border: 2px solid #ddd; margin: 0 auto 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #666; background: #f9f9f9;">
+                    {format_data["ratio"]}
+                </div>
+                <div style="font-family: 'Playfair Display', serif; font-weight: 500; margin-bottom: 0.3rem;">Landscape</div>
+                <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.3rem;">{format_data["size"]}</div>
+                <div style="font-size: 0.7rem; color: #888; font-style: italic;">{format_data["description"]}</div>
+            </div>
+            """
+            st.markdown(format_html, unsafe_allow_html=True)
+            
+            if st.button("SELECT LANDSCAPE", key="format_Landscape", 
+                       type="primary" if selected_format == "Landscape" else "secondary",
+                       use_container_width=True):
+                st.session_state.selected_format = "Landscape"
+                st.rerun()
+        
+        # Section 1: Palette de couleurs (numéro changé)
         st.markdown("""
         <div class="chanel-section-title">
             <span class="chanel-section-number">I</span>
@@ -1508,7 +1653,9 @@ def main():
         if st.button("CREATE IMAGE", type="primary", use_container_width=True):
             if final_user_prompt.strip():
                 with st.spinner("Creating..."):
-                    generated_image = generate_image_openai(full_prompt)
+                    # Récupérer le format sélectionné
+                    selected_image_format = image_formats[selected_format]["size"]
+                    generated_image = generate_image_openai(full_prompt, selected_image_format)
                     
                     if generated_image:
                         st.session_state.generated_image = generated_image
@@ -1557,10 +1704,12 @@ def main():
                 final_image.save(buf, format="PNG")
                 byte_data = buf.getvalue()
                 
+                # Nom de fichier avec format
+                format_name = selected_format.lower()
                 st.download_button(
                     label="DOWNLOAD",
                     data=byte_data,
-                    file_name=f"chanel_ing_creation_{int(time.time())}.png",
+                    file_name=f"ing_creation_{format_name}_{int(time.time())}.png",
                     mime="image/png",
                     use_container_width=True
                 )
@@ -1581,7 +1730,9 @@ def main():
                             else:
                                 final_prompt = base_prompt + st.session_state.get('user_prompt', '')
                             
-                            new_image = generate_image_openai(final_prompt)
+                            # Récupérer le format sélectionné
+                            selected_image_format = image_formats[selected_format]["size"]
+                            new_image = generate_image_openai(final_prompt, selected_image_format)
                             if new_image:
                                 st.session_state.generated_image = new_image
                                 st.rerun()
@@ -1601,6 +1752,7 @@ def main():
             <div class="chanel-tips">
                 <div class="tips-title">Studio Tips:</div>
                 <div class="tips-content">
+                    • Choose your format first: Square (1:1) for Instagram, Portrait (2:3) for Stories, Landscape (3:2) for LinkedIn<br>
                     • Use 'photorealistic', 'natural lighting'<br>
                     • Describe specific details (age, clothing, environment)<br>
                     • Add 'documentary style' or 'candid photography'<br>
