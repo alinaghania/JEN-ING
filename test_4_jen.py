@@ -15,46 +15,48 @@ client = OpenAI(api_key=st.secrets["api_key"])
 def generate_brand_messages(image_prompt):
     """Génère 3 propositions de messages de marque basés sur le prompt de l'image"""
     try:
-        message_prompt = f"""You are a senior copywriter for ING bank, expert in the "do your thing" campaign. 
+        message_prompt = f"""You are a senior copywriter for MACIF insurance company, expert in their "l'assurance en toute confiance" campaign. 
 
 Based on this specific image scene: "{image_prompt}"
 
-Generate 3 short, impactful brand messages following ING's brand guidelines:
+Generate 3 short, impactful brand messages following MACIF's brand guidelines:
 
 BRAND ESSENCE:
-- "do your thing" philosophy - empowering people to pursue their goals
-- Banking that enables freedom, not restricts it
-- Authentic, human, optimistic tone
-- Focus on customer empowerment and possibilities
+- "l'assurance en toute confiance" philosophy - providing security and peace of mind
+- Insurance that protects what matters most
+- Caring, reliable, human approach
+- Focus on protection, family values, and life moments
+- Mutuelle spirit - community and solidarity
 
 WRITING STYLE:
-- Conversational, not corporate
-- Direct and action-oriented
-- Optimistic and enabling
-- Personal pronouns (you, your, we)
-- Simple, clear language
+- Warm and reassuring, not corporate
+- Clear and accessible language
+- Protective and caring tone
+- Personal pronouns (you, your, we, together)
+- Simple, heartfelt language
 - Maximum 5-6 words per message (very short and punchy)
 - Maximum 2 lines per message
 
 CONTEXT ADAPTATION:
-- If entrepreneur scene → focus on business growth, ambition
-- If family scene → focus on life goals, security, future
-- If personal achievement → focus on dreams, possibilities, support
+- If family scene → focus on protection, security, peace of mind
+- If home scene → focus on home protection, safety, belonging
+- If life moments → focus on preserving precious moments
+- If professional scene → focus on professional protection, continuity
 
 Each message should:
 1. Connect directly to the specific scene described
-2. Include a banking/financial empowerment angle
-3. Feel authentic to the "do your thing" spirit
-4. Be memorable and shareable
+2. Include a protection/insurance empowerment angle
+3. Feel authentic to MACIF's caring spirit
+4. Be memorable and reassuring
 
 Format: Return exactly 3 messages, numbered 1-3, each on a new line.
 
 Example adaptations:
-- Café entrepreneur → "Your bank keeps up"
-- Home buyer → "Home. Heart. Bank."
-- Business owner → "Dare to do your thing"
-- Success moment → "Dreams don't wait. Go."
-- Achievement → "Your thing. Our support."
+- Family moment → "Protégeons l'essentiel"
+- Home scene → "Votre foyer, notre mission"
+- Life achievement → "Vos rêves, notre protection"
+- Important moment → "Ensemble, sereins"
+- Daily life → "Confiance au quotidien"
 
 Generate 3 contextual messages for this scene:"""
 
@@ -80,9 +82,9 @@ Generate 3 contextual messages for this scene:"""
     except Exception as e:
         st.error(f"Erreur lors de la génération des messages : {str(e)}")
         return [
-            "Your dreams don't wait. Go.",
-            "Do your thing. We're ready.",
-            "Banking that keeps up."
+            "Protégeons l'essentiel",
+            "Ensemble, sereins",
+            "Confiance au quotidien"
         ]
 
 def improve_prompt_with_ai(user_prompt):
@@ -92,7 +94,7 @@ def improve_prompt_with_ai(user_prompt):
 
 Take this user's basic description: "{user_prompt}"
 
-Rewrite it as a professional photography prompt that will generate hyper-realistic, authentic lifestyle images in the style of ING bank's "do your thing" campaign. 
+Rewrite it as a professional photography prompt that will generate hyper-realistic, authentic lifestyle images in the style of MACIF insurance's caring and protective brand communication. 
 
 Guidelines:
 - Focus on PHOTOREALISM and documentary-style photography
@@ -100,9 +102,10 @@ Guidelines:
 - Mention camera settings/style (like "shot with Canon 5D Mark IV", "85mm lens", "natural lighting")
 - Add authentic human details (age ranges, genuine expressions, natural poses)
 - Include environmental details that feel real and lived-in
-- Specify the mood and energy that fits ING's authentic brand
+- Specify the mood and energy that fits MACIF's caring, protective brand
 - Avoid artificial or posed-looking descriptions
 - Make it sound like a brief for a professional photographer
+- Focus on moments of security, family bonds, protection, and peace of mind
 
 Return ONLY the improved prompt, nothing else."""
 
@@ -143,7 +146,7 @@ def generate_image_openai(prompt, image_format="1024x1024"):
         return None
 
 def add_logo_to_image(image, logo_path, position="top-left", size=(200, 115)):
-    """Ajoute le logo ING à l'image"""
+    """Ajoute le logo MACIF à l'image"""
     try:
         # Ouvrir le logo
         logo = Image.open(logo_path)
@@ -177,7 +180,7 @@ def add_logo_to_image(image, logo_path, position="top-left", size=(200, 115)):
         return image
 
 def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None, rect_height_custom=None):
-    """Ajoute du texte avec fond orange IMPOSANT sur l'image"""
+    """Ajoute du texte avec fond rouge MACIF IMPOSANT sur l'image"""
     if not text.strip():
         return image
     
@@ -224,7 +227,8 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
     # Multiplier la taille pour compenser la petitesse de la police par défaut
         font_size = int(font_size * 2.5)  # Augmentation significative
     
-    orange_color = "#FF6600"
+    # Couleurs MACIF
+    macif_red = "#E30613"  # Rouge MACIF
     white_color = "#FFFFFF"
     
     # Gérer les retours à la ligne manuels dans le texte
@@ -286,9 +290,9 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
     if y < 0:
         y = 0
     
-    # Dessiner le rectangle orange de fond IMPOSANT
+    # Dessiner le rectangle rouge MACIF de fond IMPOSANT
     draw.rectangle([x, y, x + rect_width, y + rect_height], 
-                  fill=orange_color, outline=orange_color)
+                  fill=macif_red, outline=macif_red)
     
     # Centrer le texte dans le rectangle
     total_text_height = len(lines) * line_height
@@ -308,25 +312,26 @@ def add_text_overlay(image, text, position, font_size=60, rect_width_custom=None
 
 def main():
     st.set_page_config(
-        page_title="ING CREATIVE GENERATOR",
+        page_title="MACIF CREATIVE GENERATOR",
         layout="wide",
         initial_sidebar_state="collapsed"
     )
     
-    # CSS luxueux inspiré de Chanel avec correction pour les palettes
+    # CSS adapté aux couleurs MACIF
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
     
-    /* Variables CSS pour la cohérence */
+    /* Variables CSS pour MACIF */
     :root {
-        --chanel-black: #000000;
-        --chanel-white: #FFFFFF;
-        --chanel-gold: #D4AF37;
-        --chanel-cream: #F8F6F0;
-        --chanel-pearl: #F5F5F5;
-        --chanel-shadow: rgba(0, 0, 0, 0.1);
-        --chanel-shadow-deep: rgba(0, 0, 0, 0.25);
+        --macif-red: #E30613;
+        --macif-dark-red: #B8050F;
+        --macif-white: #FFFFFF;
+        --macif-gray: #F8F8F8;
+        --macif-dark-gray: #333333;
+        --macif-light-gray: #F5F5F5;
+        --macif-shadow: rgba(227, 6, 19, 0.1);
+        --macif-shadow-deep: rgba(227, 6, 19, 0.25);
     }
     
     /* Reset et base */
@@ -340,14 +345,14 @@ def main():
     }
     
     .stApp {
-        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
+        background: linear-gradient(135deg, var(--macif-gray) 0%, var(--macif-white) 100%);
         font-family: 'Inter', sans-serif;
-        color: var(--chanel-black);
+        color: var(--macif-dark-gray);
     }
     
-    /* Header majestueux */
-    .chanel-hero {
-        background: linear-gradient(135deg, var(--chanel-black) 0%, #1a1a1a 50%, var(--chanel-black) 100%);
+    /* Header MACIF */
+    .macif-hero {
+        background: linear-gradient(135deg, var(--macif-red) 0%, var(--macif-dark-red) 50%, var(--macif-red) 100%);
         height: 35vh;
         display: flex;
         flex-direction: column;
@@ -357,7 +362,7 @@ def main():
         overflow: hidden;
     }
     
-    .chanel-hero::before {
+    .macif-hero::before {
         content: '';
         position: absolute;
         top: 0;
@@ -365,8 +370,8 @@ def main():
         right: 0;
         bottom: 0;
         background: 
-            radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
         animation: shimmer 8s ease-in-out infinite alternate;
     }
     
@@ -375,11 +380,11 @@ def main():
         100% { opacity: 0.7; }
     }
     
-    .chanel-logo {
+    .macif-logo {
         font-family: 'Playfair Display', serif;
         font-size: 3.5rem;
         font-weight: 300;
-        color: var(--chanel-white);
+        color: var(--macif-white);
         letter-spacing: 8px;
         text-align: center;
         margin: 0;
@@ -388,29 +393,31 @@ def main():
         text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
     }
     
-    .chanel-subtitle {
+    .macif-subtitle {
         font-family: 'Inter', sans-serif;
         font-size: 0.9rem;
         font-weight: 300;
-        color: var(--chanel-gold);
+        color: var(--macif-white);
         letter-spacing: 3px;
         text-transform: uppercase;
         margin-top: 1rem;
         position: relative;
         z-index: 2;
+        opacity: 0.9;
     }
     
-    .chanel-divider {
+    .macif-divider {
         width: 100px;
         height: 1px;
-        background: var(--chanel-gold);
+        background: var(--macif-white);
         margin: 1.5rem auto;
         position: relative;
         z-index: 2;
+        opacity: 0.8;
     }
     
-    /* Container principal luxueux */
-    .chanel-container {
+    /* Container principal */
+    .macif-container {
         max-width: 1600px;
         margin: -80px auto 0;
         padding: 0 3rem 6rem;
@@ -418,74 +425,74 @@ def main():
         z-index: 10;
     }
     
-    /* Cards élégantes */
-    .chanel-card {
-        background: var(--chanel-white);
+    /* Cards MACIF */
+    .macif-card {
+        background: var(--macif-white);
         border-radius: 0;
         box-shadow: 
-            0 10px 40px var(--chanel-shadow),
+            0 10px 40px var(--macif-shadow),
             0 2px 8px rgba(0, 0, 0, 0.05);
         padding: 4rem;
         margin: 3rem 0;
-        border: 1px solid rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(227, 6, 19, 0.1);
         position: relative;
         transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
     }
     
-    .chanel-card::before {
+    .macif-card::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         height: 2px;
-        background: linear-gradient(90deg, transparent 0%, var(--chanel-gold) 50%, transparent 100%);
+        background: linear-gradient(90deg, transparent 0%, var(--macif-red) 50%, transparent 100%);
         opacity: 0;
         transition: opacity 0.6s ease;
     }
     
-    .chanel-card:hover::before {
+    .macif-card:hover::before {
         opacity: 1;
     }
     
-    .chanel-card:hover {
+    .macif-card:hover {
         transform: translateY(-12px);
         box-shadow: 
-            0 25px 60px var(--chanel-shadow-deep),
+            0 25px 60px var(--macif-shadow-deep),
             0 5px 15px rgba(0, 0, 0, 0.1);
     }
     
-    /* Card résultat spéciale */
-    .chanel-result-card {
-        background: linear-gradient(135deg, var(--chanel-black) 0%, #1a1a1a 100%);
-        color: var(--chanel-white);
+    /* Card résultat MACIF */
+    .macif-result-card {
+        background: linear-gradient(135deg, var(--macif-red) 0%, var(--macif-dark-red) 100%);
+        color: var(--macif-white);
         position: relative;
         overflow: hidden;
     }
     
-    .chanel-result-card::after {
+    .macif-result-card::after {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, var(--chanel-gold) 0%, #FFD700 50%, var(--chanel-gold) 100%);
+        background: linear-gradient(90deg, var(--macif-white) 0%, rgba(255,255,255,0.8) 50%, var(--macif-white) 100%);
     }
     
-    /* Titres de section sophistiqués */
-    .chanel-section-title {
+    /* Titres de section */
+    .macif-section-title {
         font-family: 'Playfair Display', serif;
         font-size: 1.8rem;
         font-weight: 400;
-        color: var(--chanel-black);
+        color: var(--macif-dark-gray);
         margin: 3rem 0 2rem 0;
         text-align: center;
         position: relative;
         letter-spacing: 1px;
     }
     
-    .chanel-section-title::after {
+    .macif-section-title::after {
         content: '';
         position: absolute;
         bottom: -10px;
@@ -493,50 +500,50 @@ def main():
         transform: translateX(-50%);
         width: 60px;
         height: 1px;
-        background: var(--chanel-gold);
+        background: var(--macif-red);
     }
     
-    /* Numérotation élégante */
-    .chanel-section-number {
+    /* Numérotation MACIF */
+    .macif-section-number {
         display: inline-block;
         width: 40px;
         height: 40px;
-        border: 2px solid var(--chanel-gold);
+        border: 2px solid var(--macif-red);
         border-radius: 50%;
         text-align: center;
         line-height: 36px;
         font-family: 'Playfair Display', serif;
         font-weight: 500;
-        color: var(--chanel-gold);
+        color: var(--macif-red);
         margin-right: 1rem;
         font-size: 1.1rem;
     }
     
-    /* Inputs raffinés */
+    /* Inputs */
     .stTextArea textarea {
-        border: 1px solid rgba(212, 175, 55, 0.3);
+        border: 1px solid rgba(227, 6, 19, 0.3);
         border-radius: 0;
         padding: 1.5rem;
         font-family: 'Inter', sans-serif;
         font-size: 1rem;
         line-height: 1.6;
-        background: var(--chanel-pearl);
+        background: var(--macif-light-gray);
         transition: all 0.4s ease;
         resize: vertical;
     }
     
     .stTextArea textarea:focus {
-        border-color: var(--chanel-gold);
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-        background: var(--chanel-white);
+        border-color: var(--macif-red);
+        box-shadow: 0 0 0 2px rgba(227, 6, 19, 0.1);
+        background: var(--macif-white);
         outline: none;
     }
     
-    /* Boutons luxueux */
+    /* Boutons MACIF */
     .stButton button {
-        background: linear-gradient(135deg, var(--chanel-black) 0%, #333 100%);
-        color: var(--chanel-white);
-        border: 1px solid var(--chanel-black);
+        background: linear-gradient(135deg, var(--macif-red) 0%, var(--macif-dark-red) 100%);
+        color: var(--macif-white);
+        border: 1px solid var(--macif-red);
         border-radius: 0;
         padding: 1rem 2.5rem;
         font-family: 'Inter', sans-serif;
@@ -566,71 +573,71 @@ def main():
     
     .stButton button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        border-color: var(--chanel-gold);
+        box-shadow: 0 8px 25px rgba(227, 6, 19, 0.3);
+        border-color: var(--macif-white);
     }
     
-    /* Boutons primaires dorés */
+    /* Boutons primaires */
     .stButton button[kind="primary"] {
-        background: linear-gradient(135deg, var(--chanel-gold) 0%, #B8860B 100%) !important;
-        color: var(--chanel-black) !important;
-        border-color: var(--chanel-gold) !important;
+        background: linear-gradient(135deg, var(--macif-red) 0%, var(--macif-dark-red) 100%) !important;
+        color: var(--macif-white) !important;
+        border-color: var(--macif-red) !important;
         font-weight: 600 !important;
     }
     
     .stButton button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #FFD700 0%, var(--chanel-gold) 100%) !important;
-        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4) !important;
+        background: linear-gradient(135deg, var(--macif-dark-red) 0%, var(--macif-red) 100%) !important;
+        box-shadow: 0 8px 25px rgba(227, 6, 19, 0.4) !important;
     }
     
     /* Boutons secondaires */
     .stButton button[kind="secondary"] {
         background: transparent !important;
-        color: var(--chanel-gold) !important;
-        border: 2px solid var(--chanel-gold) !important;
+        color: var(--macif-red) !important;
+        border: 2px solid var(--macif-red) !important;
         padding: 0.8rem 2rem !important;
     }
     
     .stButton button[kind="secondary"]:hover {
-        background: var(--chanel-gold) !important;
-        color: var(--chanel-black) !important;
+        background: var(--macif-red) !important;
+        color: var(--macif-white) !important;
     }
     
-    /* Selectbox format d'image */
+    /* Selectbox */
     .stSelectbox > div > div {
-        border: 1px solid rgba(212, 175, 55, 0.3);
+        border: 1px solid rgba(227, 6, 19, 0.3);
         border-radius: 0;
-        background: var(--chanel-pearl);
+        background: var(--macif-light-gray);
         transition: all 0.3s ease;
     }
     
     .stSelectbox > div > div:focus-within {
-        border-color: var(--chanel-gold);
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+        border-color: var(--macif-red);
+        box-shadow: 0 0 0 2px rgba(227, 6, 19, 0.1);
     }
     
-    /* Cartes de format d'image */
+    /* Cards de format */
     .format-card {
-        border: 2px solid rgba(212, 175, 55, 0.3);
+        border: 2px solid rgba(227, 6, 19, 0.3);
         padding: 1rem;
         text-align: center;
         transition: all 0.3s ease;
         cursor: pointer;
-        background: var(--chanel-white);
+        background: var(--macif-white);
         position: relative;
     }
     
     .format-card:hover {
-        border-color: var(--chanel-gold);
+        border-color: var(--macif-red);
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px var(--chanel-shadow);
+        box-shadow: 0 8px 20px var(--macif-shadow);
     }
     
     .format-card.selected {
-        border-color: var(--chanel-gold);
-        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
+        border-color: var(--macif-red);
+        background: linear-gradient(135deg, var(--macif-gray) 0%, var(--macif-white) 100%);
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+        box-shadow: 0 8px 20px rgba(227, 6, 19, 0.2);
     }
     
     .format-card.selected::before {
@@ -638,7 +645,7 @@ def main():
         position: absolute;
         top: 8px;
         right: 8px;
-        color: var(--chanel-gold);
+        color: var(--macif-red);
         font-weight: bold;
         font-size: 1rem;
     }
@@ -659,7 +666,7 @@ def main():
     .format-name {
         font-family: 'Playfair Display', serif;
         font-weight: 500;
-        color: var(--chanel-black);
+        color: var(--macif-dark-gray);
         margin-bottom: 0.3rem;
     }
     
@@ -668,8 +675,8 @@ def main():
         color: #666;
     }
     
-    /* CORRECTION: Palettes de couleurs compactes en 3x2 */
-    .chanel-palette-grid {
+    /* Palettes de couleurs MACIF */
+    .macif-palette-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
@@ -677,9 +684,9 @@ def main():
         max-width: 100%;
     }
 
-    .chanel-color-palette {
-        background: var(--chanel-white);
-        border: 1px solid rgba(212, 175, 55, 0.2);
+    .macif-color-palette {
+        background: var(--macif-white);
+        border: 1px solid rgba(227, 6, 19, 0.2);
         padding: 0.8rem;
         text-align: center;
         transition: all 0.4s ease;
@@ -691,25 +698,25 @@ def main():
         justify-content: space-between;
     }
 
-    .chanel-color-palette:hover {
+    .macif-color-palette:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px var(--chanel-shadow);
-        border-color: var(--chanel-gold);
+        box-shadow: 0 8px 20px var(--macif-shadow);
+        border-color: var(--macif-red);
     }
 
-    .chanel-color-palette.selected {
-        border: 2px solid var(--chanel-gold);
-        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
+    .macif-color-palette.selected {
+        border: 2px solid var(--macif-red);
+        background: linear-gradient(135deg, var(--macif-gray) 0%, var(--macif-white) 100%);
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+        box-shadow: 0 8px 20px rgba(227, 6, 19, 0.2);
     }
 
-    .chanel-color-palette.selected::before {
+    .macif-color-palette.selected::before {
         content: '✓';
         position: absolute;
         top: 8px;
         right: 8px;
-        color: var(--chanel-gold);
+        color: var(--macif-red);
         font-weight: bold;
         font-size: 1rem;
     }
@@ -733,7 +740,7 @@ def main():
         font-family: 'Playfair Display', serif;
         font-size: 0.95rem;
         font-weight: 500;
-        color: var(--chanel-black);
+        color: var(--macif-dark-gray);
         margin-bottom: 0.3rem;
     }
 
@@ -744,17 +751,17 @@ def main():
         line-height: 1.2;
     }
     
-    /* Prompts prédéfinis élégants */
-    .chanel-prompt-grid {
+    /* Prompts prédéfinis */
+    .macif-prompt-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
         margin: 2rem 0;
     }
     
-    .chanel-prompt-card {
-        background: linear-gradient(135deg, var(--chanel-pearl) 0%, var(--chanel-white) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.2);
+    .macif-prompt-card {
+        background: linear-gradient(135deg, var(--macif-light-gray) 0%, var(--macif-white) 100%);
+        border: 1px solid rgba(227, 6, 19, 0.2);
         padding: 1.5rem;
         text-align: left;
         transition: all 0.4s ease;
@@ -762,17 +769,17 @@ def main():
         position: relative;
     }
     
-    .chanel-prompt-card:hover {
-        border-color: var(--chanel-gold);
-        background: var(--chanel-white);
+    .macif-prompt-card:hover {
+        border-color: var(--macif-red);
+        background: var(--macif-white);
         transform: translateY(-3px);
-        box-shadow: 0 8px 25px var(--chanel-shadow);
+        box-shadow: 0 8px 25px var(--macif-shadow);
     }
     
     .prompt-label {
         font-family: 'Playfair Display', serif;
         font-weight: 600;
-        color: var(--chanel-gold);
+        color: var(--macif-red);
         font-size: 1rem;
         margin-bottom: 0.5rem;
     }
@@ -783,17 +790,17 @@ def main():
         color: #555;
     }
     
-    /* Messages de marque sophistiqués */
-    .chanel-message-grid {
+    /* Messages de marque */
+    .macif-message-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
         margin: 1.5rem 0;
     }
     
-    .chanel-message-card {
-        background: linear-gradient(135deg, #f8f8f8 0%, var(--chanel-white) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.3);
+    .macif-message-card {
+        background: linear-gradient(135deg, #f8f8f8 0%, var(--macif-white) 100%);
+        border: 1px solid rgba(227, 6, 19, 0.3);
         padding: 1rem;
         text-align: center;
         transition: all 0.3s ease;
@@ -802,64 +809,64 @@ def main():
         font-style: italic;
     }
     
-    .chanel-message-card:hover {
-        background: var(--chanel-gold);
-        color: var(--chanel-white);
+    .macif-message-card:hover {
+        background: var(--macif-red);
+        color: var(--macif-white);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 6px 20px rgba(227, 6, 19, 0.3);
     }
     
-    /* Contrôles de positionnement */
+    /* Contrôles */
     .stSlider > div > div > div {
-        background: var(--chanel-gold) !important;
+        background: var(--macif-red) !important;
     }
     
     .stSlider > div > div > div > div {
-        background: var(--chanel-black) !important;
+        background: var(--macif-dark-gray) !important;
     }
     
     .stNumberInput input {
-        border: 1px solid rgba(212, 175, 55, 0.3);
+        border: 1px solid rgba(227, 6, 19, 0.3);
         border-radius: 0;
-        background: var(--chanel-pearl);
+        background: var(--macif-light-gray);
         font-family: 'Inter', sans-serif;
         transition: all 0.3s ease;
     }
     
     .stNumberInput input:focus {
-        border-color: var(--chanel-gold);
-        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-        background: var(--chanel-white);
+        border-color: var(--macif-red);
+        box-shadow: 0 0 0 2px rgba(227, 6, 19, 0.1);
+        background: var(--macif-white);
         outline: none;
     }
     
     .stCheckbox > label {
         font-family: 'Inter', sans-serif;
-        color: var(--chanel-black);
+        color: var(--macif-dark-gray);
         font-weight: 500;
     }
     
     .stCheckbox input:checked + div {
-        background-color: var(--chanel-gold) !important;
-        border-color: var(--chanel-gold) !important;
+        background-color: var(--macif-red) !important;
+        border-color: var(--macif-red) !important;
     }
     
     /* Zone d'amélioration du prompt */
-    .chanel-enhanced-prompt {
-        background: linear-gradient(135deg, #fefefe 0%, var(--chanel-cream) 100%);
-        border: 2px solid var(--chanel-gold);
+    .macif-enhanced-prompt {
+        background: linear-gradient(135deg, #fefefe 0%, var(--macif-gray) 100%);
+        border: 2px solid var(--macif-red);
         padding: 2rem;
         margin: 2rem 0;
         position: relative;
     }
     
-    .chanel-enhanced-prompt::before {
+    .macif-enhanced-prompt::before {
         content: 'ENHANCED';
         position: absolute;
         top: -10px;
         left: 20px;
-        background: var(--chanel-gold);
-        color: var(--chanel-black);
+        background: var(--macif-red);
+        color: var(--macif-white);
         padding: 0.3rem 1rem;
         font-size: 0.7rem;
         font-weight: 600;
@@ -867,23 +874,23 @@ def main():
     }
     
     /* Zone de résultat */
-    .chanel-result-title {
+    .macif-result-title {
         font-family: 'Playfair Display', serif;
         font-size: 2.5rem;
         font-weight: 300;
-        color: var(--chanel-white);
+        color: var(--macif-white);
         text-align: center;
         margin-bottom: 3rem;
         letter-spacing: 2px;
     }
     
-    .chanel-placeholder {
+    .macif-placeholder {
         text-align: center;
         padding: 6rem 2rem;
         color: rgba(255, 255, 255, 0.7);
     }
     
-    .chanel-placeholder h3 {
+    .macif-placeholder h3 {
         font-family: 'Playfair Display', serif;
         font-size: 2rem;
         font-weight: 300;
@@ -891,28 +898,28 @@ def main():
         margin-bottom: 1rem;
     }
     
-    .chanel-placeholder p {
+    .macif-placeholder p {
         font-size: 1rem;
         font-weight: 300;
     }
     
-    /* Tips section luxueuse */
-    .chanel-tips {
-        border: 2px solid var(--chanel-gold);
-        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
+    /* Tips section */
+    .macif-tips {
+        border: 2px solid var(--macif-red);
+        background: linear-gradient(135deg, var(--macif-gray) 0%, var(--macif-white) 100%);
         padding: 2rem;
         margin: 3rem 0;
         position: relative;
     }
     
-    .chanel-tips::before {
+    .macif-tips::before {
         content: 'STUDIO TIPS';
         position: absolute;
         top: -12px;
         left: 50%;
         transform: translateX(-50%);
-        background: var(--chanel-white);
-        color: var(--chanel-gold);
+        background: var(--macif-white);
+        color: var(--macif-red);
         padding: 0.5rem 1.5rem;
         font-family: 'Playfair Display', serif;
         font-weight: 500;
@@ -921,7 +928,7 @@ def main():
     
     .tips-title {
         font-family: 'Playfair Display', serif;
-        color: var(--chanel-black);
+        color: var(--macif-dark-gray);
         font-weight: 600;
         margin-bottom: 1rem;
         font-size: 1.2rem;
@@ -933,6 +940,40 @@ def main():
         font-size: 0.95rem;
     }
     
+    /* Palettes compactes */
+    .macif-color-palette-compact {
+        border: 1px solid rgba(227, 6, 19, 0.2);
+        padding: 0.5rem;
+        text-align: center;
+        transition: all 0.4s ease;
+        cursor: pointer;
+        position: relative;
+        background: var(--macif-white);
+    }
+
+    .macif-color-palette-compact:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px var(--macif-shadow);
+        border-color: var(--macif-red);
+    }
+
+    .macif-color-palette-compact.selected {
+        border: 2px solid var(--macif-red);
+        background: linear-gradient(135deg, var(--macif-gray) 0%, var(--macif-white) 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(227, 6, 19, 0.2);
+    }
+
+    .macif-color-palette-compact.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        color: var(--macif-red);
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+    
     /* Masquer les éléments Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -941,98 +982,64 @@ def main():
     
     /* Responsive design */
     @media (max-width: 768px) {
-        .chanel-logo {
+        .macif-logo {
             font-size: 2.5rem;
             letter-spacing: 4px;
         }
         
-        .chanel-container {
+        .macif-container {
             margin-top: -60px;
             padding: 0 1.5rem 3rem;
         }
         
-        .chanel-card {
+        .macif-card {
             padding: 2rem;
         }
         
-        .chanel-palette-grid {
+        .macif-palette-grid {
             grid-template-columns: repeat(2, 1fr);
             gap: 0.8rem;
         }
         
-        .chanel-prompt-grid {
+        .macif-prompt-grid {
             grid-template-columns: 1fr;
         }
     }
     
     @media (max-width: 480px) {
-        .chanel-palette-grid {
+        .macif-palette-grid {
             grid-template-columns: 1fr;
         }
-    }
-    
-    /* Styles pour les palettes compactes */
-    .chanel-color-palette-compact {
-        border: 1px solid rgba(212, 175, 55, 0.2);
-        padding: 0.5rem;
-        text-align: center;
-        transition: all 0.4s ease;
-        cursor: pointer;
-        position: relative;
-        background: var(--chanel-white);
-    }
-
-    .chanel-color-palette-compact:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px var(--chanel-shadow);
-        border-color: var(--chanel-gold);
-    }
-
-    .chanel-color-palette-compact.selected {
-        border: 2px solid var(--chanel-gold);
-        background: linear-gradient(135deg, var(--chanel-cream) 0%, var(--chanel-white) 100%);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
-    }
-
-    .chanel-color-palette-compact.selected::before {
-        content: '✓';
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        color: var(--chanel-gold);
-        font-weight: bold;
-        font-size: 0.8rem;
     }
     </style>
     """, unsafe_allow_html=True)
     
-    # Hero section Chanel
+    # Hero section MACIF
     st.markdown("""
-    <div class="chanel-hero">
-        <h1 class="chanel-logo">ING GENERATOR</h1>
-        <div class="chanel-divider"></div>
-        <p class="chanel-subtitle">CREATIVE STUDIO</p>
+    <div class="macif-hero">
+        <h1 class="macif-logo">MACIF GENERATOR</h1>
+        <div class="macif-divider"></div>
+        <p class="macif-subtitle">CREATIVE STUDIO</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Container principal
-    st.markdown('<div class="chanel-container">', unsafe_allow_html=True)
+    st.markdown('<div class="macif-container">', unsafe_allow_html=True)
     
     col1, col2 = st.columns([1.3, 1], gap="large")
     
     with col1:
-        st.markdown('<div class="chanel-card">', unsafe_allow_html=True)
+        st.markdown('<div class="macif-card">', unsafe_allow_html=True)
         
-        # Section 0: Format d'image (NOUVELLE SECTION)
+        # Section 0: Format d'image
         st.markdown("""
-        <div class="chanel-section-title">
-            <span class="chanel-section-number">0</span>
+        <div class="macif-section-title">
+            <span class="macif-section-number">0</span>
             Image Format
         </div>
         """, unsafe_allow_html=True)
         
-        # Définir les formats d'image (selon les tailles supportées par OpenAI)
+        # Définir les formats d'image
         image_formats = {
             "Square": {
                 "size": "1024x1024",
@@ -1064,7 +1071,7 @@ def main():
             selected_class = "selected" if selected_format == "Square" else ""
             
             format_html = f"""
-            <div class="format-card {selected_class}" style="border: 2px solid rgba(212, 175, 55, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
+            <div class="format-card {selected_class}" style="border: 2px solid rgba(227, 6, 19, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
                 <div style="width: 60px; height: 60px; border: 2px solid #ddd; margin: 0 auto 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #666; background: #f9f9f9;">
                     {format_data["ratio"]}
                 </div>
@@ -1086,7 +1093,7 @@ def main():
             selected_class = "selected" if selected_format == "Portrait" else ""
             
             format_html = f"""
-            <div class="format-card {selected_class}" style="border: 2px solid rgba(212, 175, 55, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
+            <div class="format-card {selected_class}" style="border: 2px solid rgba(227, 6, 19, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
                 <div style="width: 40px; height: 60px; border: 2px solid #ddd; margin: 0 auto 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #666; background: #f9f9f9;">
                     {format_data["ratio"]}
                 </div>
@@ -1108,7 +1115,7 @@ def main():
             selected_class = "selected" if selected_format == "Landscape" else ""
             
             format_html = f"""
-            <div class="format-card {selected_class}" style="border: 2px solid rgba(212, 175, 55, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
+            <div class="format-card {selected_class}" style="border: 2px solid rgba(227, 6, 19, 0.3); padding: 1rem; text-align: center; background: white; margin-bottom: 0.5rem;">
                 <div style="width: 90px; height: 60px; border: 2px solid #ddd; margin: 0 auto 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #666; background: #f9f9f9;">
                     {format_data["ratio"]}
                 </div>
@@ -1125,44 +1132,44 @@ def main():
                 st.session_state.selected_format = "Landscape"
                 st.rerun()
         
-        # Section 1: Palette de couleurs (numéro changé)
+        # Section 1: Palette de couleurs MACIF
         st.markdown("""
-        <div class="chanel-section-title">
-            <span class="chanel-section-number">I</span>
+        <div class="macif-section-title">
+            <span class="macif-section-number">I</span>
             Color Palette
         </div>
         """, unsafe_allow_html=True)
         
-        # Définir les palettes de couleurs dans l'ordre souhaité
+        # Définir les palettes de couleurs MACIF
         color_palettes = {
-            "Natural": {
+            "MACIF Rouge": {
+                "colors": ["#E30613", "#FF1A2B", "#FF6B78", "#FFB3BA"],
+                "description": "MACIF signature red",
+                "prompt": "warm red lighting with MACIF brand colors and confident red tones"
+            },
+            "Natural Warm": {
                 "colors": ["#F5F5DC", "#DEB887", "#D2B48C", "#BC9A6A"],
                 "description": "Warm natural tones",
                 "prompt": "warm natural lighting with beige, sand, and golden hour tones"
             },
-            "ING Orange": {
-                "colors": ["#FF6600", "#FF8533", "#FFB366", "#FFCC99"],
-                "description": "ING signature orange",
-                "prompt": "vibrant orange and warm amber lighting that complements ING's brand colors"
+            "Protection Blue": {
+                "colors": ["#2C5282", "#3182CE", "#63B3ED", "#BEE3F8"],
+                "description": "Trust and security",
+                "prompt": "trustworthy blue lighting with professional security tones"
             },
-            "Urban Cool": {
-                "colors": ["#708090", "#2F4F4F", "#696969", "#A9A9A9"],
-                "description": "Modern city vibes",
-                "prompt": "cool urban lighting with slate gray and charcoal tones"
+            "Family Green": {
+                "colors": ["#22543D", "#38A169", "#68D391", "#C6F6D5"],
+                "description": "Life and growth",
+                "prompt": "fresh family lighting with life-affirming green tones"
             },
-            "Fresh Energy": {
-                "colors": ["#32CD32", "#98FB98", "#90EE90", "#F0FFF0"],
-                "description": "Fresh green energy",
-                "prompt": "fresh energetic lighting with vibrant green and nature-inspired tones"
-            },
-            "Premium Blue": {
-                "colors": ["#4169E1", "#6495ED", "#87CEEB", "#E6F3FF"],
-                "description": "Professional trust",
-                "prompt": "professional blue lighting with trustworthy and premium blue tones"
+            "Comfort Gray": {
+                "colors": ["#4A5568", "#718096", "#A0AEC0", "#E2E8F0"],
+                "description": "Stable confidence",
+                "prompt": "comfortable gray lighting with stable and reassuring tones"
             },
             "Sunset Warm": {
                 "colors": ["#FF6B35", "#F7931E", "#FFD23F", "#FFF3CD"],
-                "description": "Golden sunset",
+                "description": "Golden moment",
                 "prompt": "golden sunset lighting with warm orange, amber and honey tones"
             }
         }
@@ -1170,17 +1177,17 @@ def main():
         selected_palette = st.session_state.get('selected_palette', None)
         palette_names = list(color_palettes.keys())
         
-        # PREMIÈRE LIGNE : Natural, ING Orange, Urban Cool
+        # PREMIÈRE LIGNE : MACIF Rouge, Natural Warm, Protection Blue
         col1_row1, col2_row1, col3_row1 = st.columns(3, gap="small")
         
         with col1_row1:
-            # Natural palette
-            palette_data = color_palettes["Natural"]
-            selected_class = "selected" if selected_palette == "Natural" else ""
+            # MACIF Rouge palette
+            palette_data = color_palettes["MACIF Rouge"]
+            selected_class = "selected" if selected_palette == "MACIF Rouge" else ""
             
             palette_html = f"""
-            <div class="chanel-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(212, 175, 55, 0.2); background: white; margin-bottom: 0.5rem;">
-                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Natural</div>
+            <div class="macif-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(227, 6, 19, 0.2); background: white; margin-bottom: 0.5rem;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">MACIF Rouge</div>
                 <div style="display: flex; justify-content: center; gap: 3px; margin: 0.5rem 0;">
             """
             for color in palette_data["colors"]:
@@ -1193,20 +1200,20 @@ def main():
             """
             st.markdown(palette_html, unsafe_allow_html=True)
             
-            if st.button("SELECT NATURAL", key="palette_Natural", 
-                       type="primary" if selected_palette == "Natural" else "secondary",
+            if st.button("SELECT MACIF ROUGE", key="palette_MACIF Rouge", 
+                       type="primary" if selected_palette == "MACIF Rouge" else "secondary",
                        use_container_width=True):
-                st.session_state.selected_palette = "Natural" if selected_palette != "Natural" else None
+                st.session_state.selected_palette = "MACIF Rouge" if selected_palette != "MACIF Rouge" else None
                 st.rerun()
         
         with col2_row1:
-            # ING Orange palette
-            palette_data = color_palettes["ING Orange"]
-            selected_class = "selected" if selected_palette == "ING Orange" else ""
+            # Natural Warm palette
+            palette_data = color_palettes["Natural Warm"]
+            selected_class = "selected" if selected_palette == "Natural Warm" else ""
             
             palette_html = f"""
-            <div class="chanel-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(212, 175, 55, 0.2); background: white; margin-bottom: 0.5rem;">
-                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">ING Orange</div>
+            <div class="macif-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(227, 6, 19, 0.2); background: white; margin-bottom: 0.5rem;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Natural Warm</div>
                 <div style="display: flex; justify-content: center; gap: 3px; margin: 0.5rem 0;">
             """
             for color in palette_data["colors"]:
@@ -1219,20 +1226,20 @@ def main():
             """
             st.markdown(palette_html, unsafe_allow_html=True)
             
-            if st.button("SELECT ING ORANGE", key="palette_ING Orange", 
-                       type="primary" if selected_palette == "ING Orange" else "secondary",
+            if st.button("SELECT NATURAL WARM", key="palette_Natural Warm", 
+                       type="primary" if selected_palette == "Natural Warm" else "secondary",
                        use_container_width=True):
-                st.session_state.selected_palette = "ING Orange" if selected_palette != "ING Orange" else None
+                st.session_state.selected_palette = "Natural Warm" if selected_palette != "Natural Warm" else None
                 st.rerun()
         
         with col3_row1:
-            # Urban Cool palette
-            palette_data = color_palettes["Urban Cool"]
-            selected_class = "selected" if selected_palette == "Urban Cool" else ""
+            # Protection Blue palette
+            palette_data = color_palettes["Protection Blue"]
+            selected_class = "selected" if selected_palette == "Protection Blue" else ""
             
             palette_html = f"""
-            <div class="chanel-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(212, 175, 55, 0.2); background: white; margin-bottom: 0.5rem;">
-                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Urban Cool</div>
+            <div class="macif-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(227, 6, 19, 0.2); background: white; margin-bottom: 0.5rem;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Protection Blue</div>
                 <div style="display: flex; justify-content: center; gap: 3px; margin: 0.5rem 0;">
             """
             for color in palette_data["colors"]:
@@ -1245,23 +1252,23 @@ def main():
             """
             st.markdown(palette_html, unsafe_allow_html=True)
             
-            if st.button("SELECT URBAN COOL", key="palette_Urban Cool", 
-                       type="primary" if selected_palette == "Urban Cool" else "secondary",
+            if st.button("SELECT PROTECTION BLUE", key="palette_Protection Blue", 
+                       type="primary" if selected_palette == "Protection Blue" else "secondary",
                        use_container_width=True):
-                st.session_state.selected_palette = "Urban Cool" if selected_palette != "Urban Cool" else None
+                st.session_state.selected_palette = "Protection Blue" if selected_palette != "Protection Blue" else None
                 st.rerun()
         
-        # DEUXIÈME LIGNE : Fresh Energy, Premium Blue, Sunset Warm
+        # DEUXIÈME LIGNE : Family Green, Comfort Gray, Sunset Warm
         col1_row2, col2_row2, col3_row2 = st.columns(3, gap="small")
         
         with col1_row2:
-            # Fresh Energy palette
-            palette_data = color_palettes["Fresh Energy"]
-            selected_class = "selected" if selected_palette == "Fresh Energy" else ""
+            # Family Green palette
+            palette_data = color_palettes["Family Green"]
+            selected_class = "selected" if selected_palette == "Family Green" else ""
             
             palette_html = f"""
-            <div class="chanel-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(212, 175, 55, 0.2); background: white; margin-bottom: 0.5rem;">
-                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Fresh Energy</div>
+            <div class="macif-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(227, 6, 19, 0.2); background: white; margin-bottom: 0.5rem;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Family Green</div>
                 <div style="display: flex; justify-content: center; gap: 3px; margin: 0.5rem 0;">
             """
             for color in palette_data["colors"]:
@@ -1274,20 +1281,20 @@ def main():
             """
             st.markdown(palette_html, unsafe_allow_html=True)
             
-            if st.button("SELECT FRESH ENERGY", key="palette_Fresh Energy", 
-                       type="primary" if selected_palette == "Fresh Energy" else "secondary",
+            if st.button("SELECT FAMILY GREEN", key="palette_Family Green", 
+                       type="primary" if selected_palette == "Family Green" else "secondary",
                        use_container_width=True):
-                st.session_state.selected_palette = "Fresh Energy" if selected_palette != "Fresh Energy" else None
+                st.session_state.selected_palette = "Family Green" if selected_palette != "Family Green" else None
                 st.rerun()
         
         with col2_row2:
-            # Premium Blue palette
-            palette_data = color_palettes["Premium Blue"]
-            selected_class = "selected" if selected_palette == "Premium Blue" else ""
+            # Comfort Gray palette
+            palette_data = color_palettes["Comfort Gray"]
+            selected_class = "selected" if selected_palette == "Comfort Gray" else ""
             
             palette_html = f"""
-            <div class="chanel-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(212, 175, 55, 0.2); background: white; margin-bottom: 0.5rem;">
-                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Premium Blue</div>
+            <div class="macif-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(227, 6, 19, 0.2); background: white; margin-bottom: 0.5rem;">
+                <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Comfort Gray</div>
                 <div style="display: flex; justify-content: center; gap: 3px; margin: 0.5rem 0;">
             """
             for color in palette_data["colors"]:
@@ -1300,10 +1307,10 @@ def main():
             """
             st.markdown(palette_html, unsafe_allow_html=True)
             
-            if st.button("SELECT PREMIUM BLUE", key="palette_Premium Blue", 
-                       type="primary" if selected_palette == "Premium Blue" else "secondary",
+            if st.button("SELECT COMFORT GRAY", key="palette_Comfort Gray", 
+                       type="primary" if selected_palette == "Comfort Gray" else "secondary",
                        use_container_width=True):
-                st.session_state.selected_palette = "Premium Blue" if selected_palette != "Premium Blue" else None
+                st.session_state.selected_palette = "Comfort Gray" if selected_palette != "Comfort Gray" else None
                 st.rerun()
         
         with col3_row2:
@@ -1312,7 +1319,7 @@ def main():
             selected_class = "selected" if selected_palette == "Sunset Warm" else ""
             
             palette_html = f"""
-            <div class="chanel-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(212, 175, 55, 0.2); background: white; margin-bottom: 0.5rem;">
+            <div class="macif-color-palette-compact {selected_class}" style="text-align: center; padding: 0.8rem; border: 1px solid rgba(227, 6, 19, 0.2); background: white; margin-bottom: 0.5rem;">
                 <div style="font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">Sunset Warm</div>
                 <div style="display: flex; justify-content: center; gap: 3px; margin: 0.5rem 0;">
             """
@@ -1332,10 +1339,10 @@ def main():
                 st.session_state.selected_palette = "Sunset Warm" if selected_palette != "Sunset Warm" else None
                 st.rerun()
         
-        # Section 2: Description de scène
+        # Section 2: Description de scène MACIF
         st.markdown("""
-        <div class="chanel-section-title">
-            <span class="chanel-section-number">II</span>
+        <div class="macif-section-title">
+            <span class="macif-section-number">II</span>
             Scene Composition
         </div>
         """, unsafe_allow_html=True)
@@ -1343,109 +1350,110 @@ def main():
         st.markdown("**Ready-to-Use Inspirations:**")
 
         default_prompts = {
-            "Entrepreneur": "Young entrepreneur working from a rooftop café, genuine smile while checking business success on laptop",
-            "Family": "Diverse family celebrating a home purchase, authentic joy and hugs in front of their new house", 
-            "Business Woman": "Blonde woman in her 30s opening her first business, real excitement holding keys to her new shop with her dog",
-            "Student": "University student celebrating graduation, authentic pride holding diploma with friends cheering in background",
-            "Couple": "Young couple planning their future together, natural intimacy while reviewing financial documents at home",
-            "Freelancer": "Creative freelancer in co-working space, genuine satisfaction completing a project on laptop with coffee"
+            "Famille Protection": "Famille heureuse se détendant dans leur salon, sentiment de sécurité et protection, sourires authentiques en regardant l'avenir avec confiance",
+            "Propriétaire Serein": "Couple dans la quarantaine devant leur maison, expressions rassurées et paisibles, sentiment de protection de leur patrimoine", 
+            "Parent Responsable": "Mère de famille dans sa cuisine, calme et confiante en préparant le repas, ambiance chaleureuse de foyer protégé",
+            "Jeune Conducteur": "Jeune adulte souriant près de sa première voiture, expression de confiance et responsabilité, sentiment de protection routière",
+            "Retraité Paisible": "Couple de retraités dans leur jardin, sérénité et tranquillité d'esprit, profitant de leur sécurité financière",
+            "Entrepreneur Protégé": "Propriétaire de petite entreprise dans son commerce, confiance en l'avenir grâce à la protection de son activité"
         }
 
-        # PREMIÈRE LIGNE : Entrepreneur, Family, Business Woman
+        # PREMIÈRE LIGNE : Famille Protection, Propriétaire Serein, Parent Responsable
         col1_prompt1, col2_prompt1, col3_prompt1 = st.columns(3, gap="small")
 
         with col1_prompt1:
             prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Entrepreneur</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Entrepreneur"]}</div>
+            <div class="macif-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(227, 6, 19, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #E30613; font-size: 1rem; margin-bottom: 0.5rem;">Famille Protection</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Famille Protection"]}</div>
             </div>
             """
             st.markdown(prompt_html, unsafe_allow_html=True)
             
-            if st.button("USE ENTREPRENEUR", key="default_prompt_0", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Entrepreneur"]
+            if st.button("USE FAMILLE PROTECTION", key="default_prompt_0", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Famille Protection"]
                 st.rerun()
 
         with col2_prompt1:
             prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Family</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Family"]}</div>
+            <div class="macif-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(227, 6, 19, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #E30613; font-size: 1rem; margin-bottom: 0.5rem;">Propriétaire Serein</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Propriétaire Serein"]}</div>
             </div>
             """
             st.markdown(prompt_html, unsafe_allow_html=True)
             
-            if st.button("USE FAMILY", key="default_prompt_1", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Family"]
+            if st.button("USE PROPRIÉTAIRE SEREIN", key="default_prompt_1", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Propriétaire Serein"]
                 st.rerun()
 
         with col3_prompt1:
             prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Business Woman</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Business Woman"]}</div>
+            <div class="macif-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(227, 6, 19, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #E30613; font-size: 1rem; margin-bottom: 0.5rem;">Parent Responsable</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Parent Responsable"]}</div>
             </div>
             """
             st.markdown(prompt_html, unsafe_allow_html=True)
             
-            if st.button("USE BUSINESS WOMAN", key="default_prompt_2", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Business Woman"]
+            if st.button("USE PARENT RESPONSABLE", key="default_prompt_2", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Parent Responsable"]
                 st.rerun()
 
-        # DEUXIÈME LIGNE : Student, Couple, Freelancer
+        # DEUXIÈME LIGNE : Jeune Conducteur, Retraité Paisible, Entrepreneur Protégé
         col1_prompt2, col2_prompt2, col3_prompt2 = st.columns(3, gap="small")
 
         with col1_prompt2:
             prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Student</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Student"]}</div>
+            <div class="macif-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(227, 6, 19, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #E30613; font-size: 1rem; margin-bottom: 0.5rem;">Jeune Conducteur</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Jeune Conducteur"]}</div>
             </div>
             """
             st.markdown(prompt_html, unsafe_allow_html=True)
             
-            if st.button("USE STUDENT", key="default_prompt_3", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Student"]
+            if st.button("USE JEUNE CONDUCTEUR", key="default_prompt_3", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Jeune Conducteur"]
                 st.rerun()
 
         with col2_prompt2:
             prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Couple</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Couple"]}</div>
+            <div class="macif-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(227, 6, 19, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #E30613; font-size: 1rem; margin-bottom: 0.5rem;">Retraité Paisible</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Retraité Paisible"]}</div>
             </div>
             """
             st.markdown(prompt_html, unsafe_allow_html=True)
             
-            if st.button("USE COUPLE", key="default_prompt_4", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Couple"]
+            if st.button("USE RETRAITÉ PAISIBLE", key="default_prompt_4", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Retraité Paisible"]
                 st.rerun()
 
         with col3_prompt2:
             prompt_html = f"""
-            <div class="chanel-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(212, 175, 55, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
-                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #D4AF37; font-size: 1rem; margin-bottom: 0.5rem;">Freelancer</div>
-                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Freelancer"]}</div>
+            <div class="macif-prompt-card" style="background: linear-gradient(135deg, #F5F5F5 0%, white 100%); border: 1px solid rgba(227, 6, 19, 0.2); padding: 1.2rem; text-align: left; margin-bottom: 0.5rem; min-height: 120px;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 600; color: #E30613; font-size: 1rem; margin-bottom: 0.5rem;">Entrepreneur Protégé</div>
+                <div style="font-size: 0.85rem; line-height: 1.4; color: #555;">{default_prompts["Entrepreneur Protégé"]}</div>
             </div>
             """
             st.markdown(prompt_html, unsafe_allow_html=True)
             
-            if st.button("USE FREELANCER", key="default_prompt_5", use_container_width=True):
-                st.session_state.selected_default_prompt = default_prompts["Freelancer"]
+            if st.button("USE ENTREPRENEUR PROTÉGÉ", key="default_prompt_5", use_container_width=True):
+                st.session_state.selected_default_prompt = default_prompts["Entrepreneur Protégé"]
                 st.rerun()
         
-        # Prompt de base
-        base_prompt = """Créez une photographie hyper-réaliste et authentique dans le style de la campagne 'do your thing' d'ING bank. Concentrez-vous sur des détails PHOTORÉALISTES avec :
+        # Prompt de base MACIF
+        base_prompt = """Créez une photographie hyper-réaliste et authentique dans le style de la communication MACIF 'l'assurance en toute confiance'. Concentrez-vous sur des détails PHOTORÉALISTES avec :
 
-- Émotions humaines RÉELLES et expressions authentiques, non posées
-- Qualité photographique professionnelle avec éclairage naturel
-- Personnes diverses et inclusives vivant des moments authentiques
-- Style photojournalistique capturant des interactions spontanées
-- Détails haute résolution dans les expressions faciales, texture de peau, vêtements
-- Sentiment de liberté, accomplissement et autonomisation personnelle
-- Style documentaire 'moment chanceux' qui semble complètement naturel
-- Éviter l'aspect artificiel généré par IA - viser le réalisme photographique primé
+- Émotions humaines RÉELLES et expressions de sérénité, protection et confiance
+- Qualité photographique professionnelle avec éclairage naturel chaleureux
+- Personnes diverses vivant des moments de sécurité et tranquillité d'esprit
+- Style photojournalistique capturant des interactions familiales et protectrices
+- Détails haute résolution dans les expressions rassurantes, texture de peau, environnements sécurisants
+- Sentiment de protection, stabilité familiale et confiance en l'avenir
+- Style documentaire 'moment précieux' qui semble complètement naturel et rassurant
+- Éviter l'aspect artificiel - viser le réalisme photographique empathique
+- Ambiance de foyer protégé, sécurité personnelle et tranquillité d'esprit
 
 """
 
@@ -1461,7 +1469,7 @@ def main():
         user_prompt = st.text_area(
             "",
             value=default_scene,
-            placeholder="Un entrepreneur de 30 ans dans un espace de travail moderne, sourire naturel en examinant les métriques de succès...",
+            placeholder="Une famille rassurée dans leur salon, sourires authentiques en regardant l'avenir avec confiance grâce à la protection MACIF...",
             height=120,
             key="user_prompt",
             label_visibility="collapsed"
@@ -1472,7 +1480,7 @@ def main():
         
         with col_prompt1:
             if 'improved_prompt' in st.session_state:
-                st.markdown('<div class="chanel-enhanced-prompt">', unsafe_allow_html=True)
+                st.markdown('<div class="macif-enhanced-prompt">', unsafe_allow_html=True)
                 improved_display = st.text_area(
                     "",
                     value=st.session_state.improved_prompt,
@@ -1502,12 +1510,12 @@ def main():
                         del st.session_state.improved_prompt
                     st.rerun()
         
-        full_prompt = base_prompt + final_user_prompt if final_user_prompt else base_prompt + "Une personne réaliste réalisant ses rêves avec une joie authentique"
+        full_prompt = base_prompt + final_user_prompt if final_user_prompt else base_prompt + "Une famille sereine profitant de moments précieux dans la sécurité de leur foyer protégé"
         
-        # Section 3: Message de marque
+        # Section 3: Message de marque MACIF
         st.markdown("""
-        <div class="chanel-section-title">
-            <span class="chanel-section-number">III</span>
+        <div class="macif-section-title">
+            <span class="macif-section-number">III</span>
             Brand Message
         </div>
         """, unsafe_allow_html=True)
@@ -1529,10 +1537,10 @@ def main():
         # Affichage des suggestions
         if 'suggested_messages' in st.session_state:
             st.markdown("**AI Suggestions:**")
-            st.markdown('<div class="chanel-message-grid">', unsafe_allow_html=True)
+            st.markdown('<div class="macif-message-grid">', unsafe_allow_html=True)
             for i, message in enumerate(st.session_state.suggested_messages):
                 message_html = f"""
-                <div class="chanel-message-card">
+                <div class="macif-message-card">
                     "{message}"
                 </div>
                 """
@@ -1549,7 +1557,7 @@ def main():
             overlay_text = st.text_area(
                 "",
                 value=default_message,
-                placeholder="Vos rêves n'attendent pas. Allez-y !\n(Utilisez les retours à la ligne pour contrôler les lignes de texte)",
+                placeholder="Protégeons l'essentiel\n(Utilisez les retours à la ligne pour contrôler les lignes de texte)",
                 height=100,
                 key="overlay_text",
                 label_visibility="collapsed",
@@ -1558,8 +1566,8 @@ def main():
         
         # Section 4: Positionnement du texte
         st.markdown("""
-        <div class="chanel-section-title">
-            <span class="chanel-section-number">IV</span>
+        <div class="macif-section-title">
+            <span class="macif-section-number">IV</span>
             Text Positioning
         </div>
         """, unsafe_allow_html=True)
@@ -1577,8 +1585,8 @@ def main():
         
         # Section 5: Dimensions du rectangle
         st.markdown("""
-        <div class="chanel-section-title">
-            <span class="chanel-section-number">V</span>
+        <div class="macif-section-title">
+            <span class="macif-section-number">V</span>
             Rectangle Dimensions
         </div>
         """, unsafe_allow_html=True)
@@ -1607,8 +1615,8 @@ def main():
         
         # Section 6: Options du logo
         st.markdown("""
-        <div class="chanel-section-title">
-            <span class="chanel-section-number">VI</span>
+        <div class="macif-section-title">
+            <span class="macif-section-number">VI</span>
             Logo Options
         </div>
         """, unsafe_allow_html=True)
@@ -1616,7 +1624,7 @@ def main():
         col_logo1, col_logo2 = st.columns([1, 1])
         
         with col_logo1:
-            add_logo = st.checkbox("Ajouter le Logo ING", key="add_logo")
+            add_logo = st.checkbox("Ajouter le Logo MACIF", key="add_logo")
             
             if add_logo:
                 logo_position = st.selectbox(
@@ -1666,8 +1674,8 @@ def main():
                 st.warning("Please describe your scene")
     
     with col2:
-        st.markdown('<div class="chanel-card chanel-result-card">', unsafe_allow_html=True)
-        st.markdown('<div class="chanel-result-title">CRÉATION</div>', unsafe_allow_html=True)
+        st.markdown('<div class="macif-card macif-result-card">', unsafe_allow_html=True)
+        st.markdown('<div class="macif-result-title">CRÉATION</div>', unsafe_allow_html=True)
         
         if 'generated_image' in st.session_state:
             # Commencer avec l'image générée
@@ -1686,7 +1694,7 @@ def main():
             
             # Ajouter le logo si demandé
             if add_logo:
-                logo_path = "ING-logo.png"
+                logo_path = "macif.png"  # Vous devrez ajouter le logo MACIF
                 logo_size = (logo_width, logo_height) if add_logo else (200, 115)
                 final_image = add_logo_to_image(
                     final_image, 
@@ -1709,7 +1717,7 @@ def main():
                 st.download_button(
                     label="DOWNLOAD",
                     data=byte_data,
-                    file_name=f"ing_creation_{format_name}_{int(time.time())}.png",
+                    file_name=f"macif_creation_{format_name}_{int(time.time())}.png",
                     mime="image/png",
                     use_container_width=True
                 )
@@ -1741,22 +1749,23 @@ def main():
         
         else:
             st.markdown("""
-            <div class="chanel-placeholder">
+            <div class="macif-placeholder">
                 <h3>Atelier de Création</h3>
                 <p>Configurez votre composition et lancez la création</p>
             </div>
             """, unsafe_allow_html=True)
             
-            # Section conseils luxueuse
+            # Section conseils MACIF
             st.markdown("""
-            <div class="chanel-tips">
+            <div class="macif-tips">
                 <div class="tips-title">Studio Tips:</div>
                 <div class="tips-content">
                     • Choose your format first: Square (1:1) for Instagram, Portrait (2:3) for Stories, Landscape (3:2) for LinkedIn<br>
-                    • Use 'photorealistic', 'natural lighting'<br>
-                    • Describe specific details (age, clothing, environment)<br>
-                    • Add 'documentary style' or 'candid photography'<br>
-                    • Prioritize authenticity over perfection
+                    • Focus on family moments, security and peace of mind<br>
+                    • Use 'photorealistic', 'natural lighting', 'reassuring'<br>
+                    • Describe specific details (family situation, home environment)<br>
+                    • Add 'documentary style' or 'authentic family photography'<br>
+                    • Prioritize warmth and protection over perfection
                 </div>
             </div>
             """, unsafe_allow_html=True)
