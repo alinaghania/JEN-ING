@@ -1685,7 +1685,7 @@ def main():
     
     with col2:
         st.markdown('<div class="maif-card maif-result-card">', unsafe_allow_html=True)
-        st.markdown('<div class="maif-result-title">CRÉATION MILITANTE</div>', unsafe_allow_html=True)
+        st.markdown('<div class="maif-result-title">CRÉATION </div>', unsafe_allow_html=True)
         
         if 'generated_image' in st.session_state:
             # Commencer avec l'image générée
