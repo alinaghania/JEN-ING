@@ -1668,7 +1668,7 @@ def main():
         
         # Bouton de génération
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if st.button("CREATE MILITANT IMAGE", type="primary", use_container_width=True):
+        if st.button("CREATE IMAGE", type="primary", use_container_width=True):
             if final_user_prompt.strip():
                 with st.spinner("Creating militant content..."):
                     # Récupérer le format sélectionné
@@ -1733,7 +1733,7 @@ def main():
                 )
             
             with col_btn2:
-                if st.button("NEW MILITANT IMAGE", use_container_width=True):
+                if st.button("NEW IMAGE", use_container_width=True):
                     # Relancer une nouvelle génération avec le même prompt
                     if 'generated_image' in st.session_state:
                         del st.session_state.generated_image
@@ -1741,7 +1741,7 @@ def main():
                     # Récupérer le prompt actuel pour regénérer
                     current_prompt = st.session_state.get('improved_prompt_display', st.session_state.get('user_prompt', ''))
                     if current_prompt.strip():
-                        with st.spinner("Nouvelle création militante..."):
+                        with st.spinner("Nouvelle création ..."):
                             # Utiliser le prompt complet comme dans la génération principale
                             if 'improved_prompt' in st.session_state:
                                 final_prompt = base_prompt + st.session_state.improved_prompt
